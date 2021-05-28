@@ -1,6 +1,7 @@
 import { v4 } from 'uuid';
 import bcrypt from 'bcryptjs';
 import { validationResult } from 'express-validator';
+import jwt from 'jsonwebtoken';
 
 import { Models } from '../database/Database';
 import { ServerError } from '../utility/error';
@@ -120,4 +121,62 @@ export const logout = async (req, res, next) => {
         console.log(e);
         return next(new ServerError('Unable to process request', 500, 'INTERNAL_SERVER_ERROR'));
     }
+}
+
+export const refresh = async (req, res, next) => {
+    const err = validationResult(req);
+
+    if (!err.isEmpty()) {
+        return next(new ServerError('Validation failed', 422, 'VALIDATION_FAILED', err.array()));
+    }
+
+    let user, refreshToken = req.get('Authorization');
+
+    if (!refreshToken) {
+        next(new ServerError('Refresh token Missing', 401, 'AUTHORIZATION_FAILED'));
+    }
+
+    refreshToken = refreshToken.split(' ')[1];
+
+    try {
+        user = await Models.User.findOne({
+            where: {
+                id: req.body.userId
+            }
+        });
+    } catch (e) {
+        console.log(e);
+        return next(new ServerError('Unable to process request', 500, 'INTERNAL_SERVER_ERROR'));
+    }
+
+    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_KEY + user.password, async (err, decoded) => {
+        if (err) {
+            next(new ServerError("Refresh Token error - " + err.message, 401, 'AUTHORIZATION_FAILED'));
+        } else {
+            try {
+                const savedRefreshToken = await Models.Token.findOne({
+                    where: {
+                        userId: user.id,
+                        refreshToken: refreshToken
+                    }
+                });
+
+                console.log(savedRefreshToken);
+                console.log(decoded);
+
+                if (savedRefreshToken && savedRefreshToken.userId === decoded.userId) {
+                    const accessToken = generateAccessTokens({ userId: user.id });
+                    res.status(200).json({
+                        accessToken,
+                        expiresAt: Date.now() + 10 * 3600
+                    });
+                } else {
+                    next(new ServerError("Refresh token invalid", 401, 'AUTHORIZATION_FAILED'));
+                }
+            } catch (e) {
+                console.log(e);
+                next(new ServerError('Unable to process request', 500, 'INTERNAL_SERVER_ERROR'));
+            }
+        }
+    });
 }

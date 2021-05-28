@@ -1,7 +1,7 @@
 import express from 'express';
 import { body } from 'express-validator';
 
-import { login, register, logout } from '../controllers/authentication';
+import { login, register, logout, refresh } from '../controllers/authentication';
 import { accessHandler } from '../middlewares/authentication';
 
 const router = express.Router();
@@ -52,6 +52,17 @@ router.delete(
             .withMessage("Refresh token required"),
     ],
     logout
+);
+
+router.get(
+    '/refresh',
+    [
+        body('userId')
+            .trim()
+            .notEmpty()
+            .withMessage('User id required')
+    ],
+    refresh
 );
 
 export default router;

@@ -1,7 +1,7 @@
 import express from 'express';
 import { body } from 'express-validator';
 
-import { createTask, deleteTask, fetchTasks } from '../controllers/task';
+import { createTask, deleteTask, fetchTasks, toggleTask } from '../controllers/task';
 
 const router = express.Router();
 
@@ -54,6 +54,17 @@ router.delete(
             .withMessage('Task id is required to delete a task')
     ],
     deleteTask
+);
+
+router.post(
+    '/toggle',
+    [
+        body('taskId')
+            .trim()
+            .notEmpty()
+            .withMessage('Task id is required to delete a task')
+    ],
+    toggleTask
 );
 
 export default router;

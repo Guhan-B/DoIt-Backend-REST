@@ -102,7 +102,7 @@ export const fetchTasks = async (req, res, next) => {
         }
 
         const tasks = await Models.Task.findAll({
-            attributes: ['id', 'title', 'priority'],
+            attributes: ['id', 'title', 'priority', 'due', 'isCompleted'],
             where: {
                 logId: req.body.logId
             }
@@ -111,6 +111,49 @@ export const fetchTasks = async (req, res, next) => {
         res.status(200).json({
             tasks: tasks,
             count: tasks.length
+        });
+    } catch (e) {
+        console.log(e);
+        return next(new ServerError('Unable to process request', 500, 'INTERNAL_SERVER_ERROR'));
+    }
+}
+
+export const toggleTask = async (req, res, next) => {
+    const err = validationResult(req);
+
+    if (!err.isEmpty()) {
+        return next(new ServerError('Validation failed', 422, 'VALIDATION_FAILED', err.array()));
+    }
+
+    try {
+        let task = await Models.Task.findOne({
+            where: {
+                id: req.body.taskId
+            }
+        });
+
+        if(!task){
+            return next(new ServerError('Task does not exist', 404, 'RESOURCE_NOT_FOUND'));
+        }
+
+        const log = await Models.Log.findOne({
+            where: {
+                userId: req.user.id,
+                id: task.logId
+            }
+        });
+
+        if (!log) {
+            return next(new ServerError('Unable to update task', 402, 'FORBIDDEN'));
+        }
+
+        task = await task.update({
+            isCompleted: !task.isCompleted
+        });
+
+        res.status(200).json({
+            message: "Task updated",
+            task: task
         });
     } catch (e) {
         console.log(e);
