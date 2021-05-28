@@ -1,49 +1,43 @@
-const express = require('express');
-const dotenv = require('dotenv');
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import helmet from 'helmet';
 
-const database = require('./utility/database');
-const errorHandler = require('./utility/error');
-const headers = require('./utility/headers');
-const Task = require('./model/tasks');
-const Log = require('./model/logs');
-const User = require('./model/user');
-const RefreshToken = require('./model/refreshtoken');
-const tasksRoutes = require('./routes/tasks');
-const logsRoutes = require('./routes/logs');
-const authRoutes = require('./routes/auth');
+import { database, createAssociation } from './database/Database';
+import errorHandler from './middlewares/error';
+import { accessHandler } from './middlewares/authentication';
+import authenticationRoutes from './routes/authentication';
+import logRoutes from './routes/log';
+import taskRoutes from './routes/task';
+import userRoutes from './routes/user';
 
-dotenv.config();
-const app = express();
+const startServer = () => {
+    dotenv.config();
+    const app = express();
 
-app.use(express.json());
-app.use(headers);
-app.use(tasksRoutes);
-app.use(logsRoutes);
-app.use('/auth', authRoutes);
-app.use(errorHandler);
+    app.use(express.json());
+    app.use(helmet());
+    app.use(cors());
 
-User.hasMany(Log, {
-    onDelete: 'CASCADE'
-});
-Log.belongsTo(User);
+    app.use('/log', accessHandler, logRoutes)
+    app.use('/task', accessHandler, taskRoutes)
+    app.use('/user', accessHandler, userRoutes)
+    app.use('/auth', authenticationRoutes);
 
-Log.hasMany(Task, {
-    onDelete: 'CASCADE'
-});
-Task.belongsTo(Log);
+    app.use(errorHandler);
 
-User.hasMany(RefreshToken, {
-    onDelete: 'CASCADE'
-});
-RefreshToken.belongsTo(User);
+    createAssociation();
 
-database
-    .sync()
-    .then(result => {
-        console.log(result);
-        app.listen(process.env.PORT);
-    })
-    .catch(error => {
-        console.log(error);
-    });
+    database.sync()
+        .then(conn => {
+            app.listen(process.env.PORT, () => {
+                console.log(`server is running at http://localhost:${process.env.PORT}`);
+            })
+        })
+        .catch(error => {
+            console.log(error);
+            console.log("[Error] Unable to start server");
+        });
+}
 
+startServer();
