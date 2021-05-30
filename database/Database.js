@@ -1,7 +1,5 @@
 import { Sequelize, DataTypes } from 'sequelize';
 
-console.log("db",);
-
 export const database = new Sequelize(
     process.env.DATABASE_NAME,
     process.env.DATABASE_USERNAME,
@@ -12,6 +10,17 @@ export const database = new Sequelize(
         port: process.env.DATABASE_PORT
     }
 );
+
+// export const database = new Sequelize(process.env.DATABASE_URI, {
+//     dialect: 'postgres',
+//     protocol: 'postgres',
+//     dialectOptions: {
+//         ssl: {
+//             require: true,
+//             rejectUnauthorized: false
+//         }
+//     }
+// });
 
 const User = database.define(
     'user',
@@ -79,7 +88,7 @@ const Task = database.define('task',
             type: DataTypes.INTEGER,
             allowNull: false
         },
-        due:{
+        due: {
             type: DataTypes.BIGINT,
             allowNull: false
         },

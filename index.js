@@ -30,8 +30,8 @@ const startServer = () => {
 
     database.sync()
         .then(conn => {
-            app.listen(process.env.PORT, () => {
-                console.log(`server is running at http://localhost:${process.env.PORT}`);
+            app.listen(process.env.SERVER_PORT, () => {
+                console.log(`server is running at http://localhost:${process.env.SERVER_PORT}`);
             })
         })
         .catch(error => {
