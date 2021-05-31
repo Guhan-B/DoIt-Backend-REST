@@ -38,6 +38,10 @@ router.post(
             .trim()
             .isLength({ min: 6 })
             .withMessage("Passowrd should be minimum 6 characters long"),
+            body('avatar')
+            .trim()
+            .isNumeric()
+            .withMessage("Avatar must be a number"),
     ],
     register
 );

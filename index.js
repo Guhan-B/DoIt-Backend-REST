@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 
-import { database, createAssociation } from './database/Database';
+import { ConnectToDatabase } from './database/Database';
 import errorHandler from './middlewares/error';
 import { accessHandler } from './middlewares/authentication';
 import authenticationRoutes from './routes/authentication';
@@ -11,7 +11,7 @@ import logRoutes from './routes/log';
 import taskRoutes from './routes/task';
 import userRoutes from './routes/user';
 
-const startServer = () => {
+const startServer = async () => {
     dotenv.config();
     const app = express();
 
@@ -26,18 +26,16 @@ const startServer = () => {
 
     app.use(errorHandler);
 
-    createAssociation();
-
-    database.sync()
-        .then(conn => {
-            app.listen(process.env.SERVER_PORT, () => {
-                console.log(`server is running at http://localhost:${process.env.SERVER_PORT}`);
-            })
+    try {
+        const client = await ConnectToDatabase();
+        app.listen(process.env.SERVER_PORT, () => {
+            console.log(client);
+            console.log(`server is running at http://localhost:${process.env.SERVER_PORT}`);
         })
-        .catch(error => {
-            console.log(error);
-            console.log("[Error] Unable to start server");
-        });
+    } catch (error) {
+        console.log(error);
+        console.log("[Error] Unable to start server");
+    }
 }
 
 startServer();

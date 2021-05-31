@@ -16,31 +16,31 @@ export const login = async (req, res, next) => {
 
     try {
         const user = await Models.User.findOne({
-            where: {
-                email: req.body.email
-            }
+            email: req.body.email
         });
 
         if (!user) {
-            next(new ServerError('Email does not exist', 401, 'RESOURCE_NOT_FOUND'));
+            return next(new ServerError('Email does not exist', 401, 'RESOURCE_NOT_FOUND'));
         }
 
         const isPasswordSame = await bcrypt.compare(req.body.password, user.password);
 
         if (!isPasswordSame) {
-            next(new ServerError('Password does not match', 401, 'AUTHENTICATION_FAILED'));
+            return next(new ServerError('Password does not match', 401, 'AUTHENTICATION_FAILED'));
         }
 
-        const accessToken = generateAccessTokens({ userId: user.id });
-        const refreshToken = generateRefreshTokens({ userId: user.id }, user.password);
+        const accessToken = generateAccessTokens({ userId: user._id });
+        const refreshToken = generateRefreshTokens({ userId: user._id }, user.password);
 
-        const result = await Models.Token.create({
-            userId: user.id,
+        const newToken = new Models.Token({
+            userId: user._id,
             refreshToken: refreshToken
         });
 
+        await newToken.save();
+
         res.status(200).json({
-            userId: user.id,
+            userId: user._id,
             accessToken,
             refreshToken,
             expiresAt: Date.now() + 10 * 3600
@@ -59,26 +59,28 @@ export const register = async (req, res, next) => {
 
     try {
         const isUserAvalible = await Models.User.findOne({
-            where: {
-                email: req.body.email
-            }
+            email: req.body.email
         });
 
+        console.log(isUserAvalible);
+
         if (isUserAvalible) {
-            next(new ServerError('Email already exist', 409, 'RESOURCE_EXISTS'));
+            return next(new ServerError('Email already exist', 409, 'RESOURCE_EXISTS'));
         }
 
         const hashedPassword = await bcrypt.hash(req.body.password, 12);
-        const newUser = await Models.User.create({
-            id: v4(),
+
+        const newUser = new Models.User({
             name: req.body.name,
             email: req.body.email,
+            avatar: req.body.avatar,
             password: hashedPassword
         });
 
+        await newUser.save();
+
         res.status(201).json({
             message: "User created successfully",
-            user: newUser
         });
     } catch (e) {
         return next(new ServerError('Unable to process request', 500, 'INTERNAL_SERVER_ERROR'));
@@ -98,21 +100,17 @@ export const logout = async (req, res, next) => {
         return next(new ServerError('Validation failed', 422, 'VALIDATION_FAILED', err.array()));
     }
 
-    console.log(req.user);
-
     try {
         const token = await Models.Token.findOne({
-            where: {
-                userId: req.user.id,
-                refreshToken: req.body.refreshToken
-            }
+            userId: req.user._id,
+            refreshToken: req.body.refreshToken
         });
 
         if (!token) {
-            next(new ServerError('Unable to logout', 403, 'FORBIDDEN'));
+            return next(new ServerError('Unable to logout', 403, 'FORBIDDEN'));
         }
 
-        await token.destroy();
+        await token.delete();
 
         res.status(200).json({
             message: "logout success"
@@ -133,16 +131,14 @@ export const refresh = async (req, res, next) => {
     let user, refreshToken = req.get('Authorization');
 
     if (!refreshToken) {
-        next(new ServerError('Refresh token Missing', 401, 'AUTHORIZATION_FAILED'));
+        return next(new ServerError('Refresh token Missing', 401, 'AUTHORIZATION_FAILED'));
     }
 
     refreshToken = refreshToken.split(' ')[1];
 
     try {
         user = await Models.User.findOne({
-            where: {
-                id: req.body.userId
-            }
+            _id: req.body.userId
         });
     } catch (e) {
         console.log(e);
@@ -151,31 +147,29 @@ export const refresh = async (req, res, next) => {
 
     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_KEY + user.password, async (err, decoded) => {
         if (err) {
-            next(new ServerError("Refresh Token error - " + err.message, 401, 'AUTHORIZATION_FAILED'));
+            return next(new ServerError("Refresh Token error - " + err.message, 401, 'AUTHORIZATION_FAILED'));
         } else {
             try {
                 const savedRefreshToken = await Models.Token.findOne({
-                    where: {
-                        userId: user.id,
-                        refreshToken: refreshToken
-                    }
+                    userId: user._id,
+                    refreshToken: refreshToken
                 });
 
                 console.log(savedRefreshToken);
                 console.log(decoded);
 
-                if (savedRefreshToken && savedRefreshToken.userId === decoded.userId) {
-                    const accessToken = generateAccessTokens({ userId: user.id });
+                if (savedRefreshToken && savedRefreshToken.userId == decoded.userId) {
+                    const accessToken = generateAccessTokens({ userId: user._id });
                     res.status(200).json({
                         accessToken,
                         expiresAt: Date.now() + 10 * 3600
                     });
                 } else {
-                    next(new ServerError("Refresh token invalid", 401, 'AUTHORIZATION_FAILED'));
+                    return next(new ServerError("Refresh token invalid", 401, 'AUTHORIZATION_FAILED'));
                 }
             } catch (e) {
                 console.log(e);
-                next(new ServerError('Unable to process request', 500, 'INTERNAL_SERVER_ERROR'));
+                return next(new ServerError('Unable to process request', 500, 'INTERNAL_SERVER_ERROR'));
             }
         }
     });

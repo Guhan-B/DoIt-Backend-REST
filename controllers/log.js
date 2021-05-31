@@ -5,7 +5,6 @@ import { ServerError } from '../utility/error';
 import { Models } from '../database/Database';
 
 export const createLog = async (req, res, next) => {
-    console.log("hello");
     const err = validationResult(req);
 
     if (!err.isEmpty()) {
@@ -13,15 +12,21 @@ export const createLog = async (req, res, next) => {
     }
 
     try {
-        const log = await Models.Log.create({
-            id: v4(),
+        const newLog = new Models.Log({
             title: req.body.title,
             note: req.body.note,
-            userId: req.user.id
+            userId: req.user._id
         });
+
+        await newLog.save();
+
         res.status(201).json({
             message: "Log created",
-            log: log,
+            log: {
+                _id: newLog._id,
+                title: newLog.title,
+                note: newLog.note
+            },
         });
     } catch (e) {
         console.log(e);
@@ -36,19 +41,22 @@ export const deleteLog = async (req, res, next) => {
         return next(new ServerError('Validation failed', 422, 'VALIDATION_FAILED', err.array()));
     }
 
+    console.log(req.user._id);
+    console.log(req.body.logId);
+
     try {
         const log = await Models.Log.findOne({
-            where: {
-                userId: req.user.id,
-                id: req.body.logId
-            }
+            userId: req.user._id,
+            _id: req.body.logId
         });
 
+        console.log(log);
+
         if (!log) {
-            next(new ServerError('Log does not exist', 404, 'RESOURCE_NOT_FOUND'));
+            return next(new ServerError('Log does not exist', 404, 'RESOURCE_NOT_FOUND'));
         }
 
-        await log.destroy();
+        await log.delete();
 
         res.status(200).json({
             message: "Log deleted",
@@ -62,12 +70,8 @@ export const deleteLog = async (req, res, next) => {
 
 export const fetchLogs = async (req, res, next) => {
     try {
-        const logs = await Models.Log.findAll({
-            attributes: ['id', 'title', 'note'],
-            where: {
-                userId: req.user.id
-            }
-        });
+        const logs = await Models.Log.find({ userId: req.user.id }).select('_id title note');
+
         res.status(200).json({
             logs: logs,
             count: logs.length
@@ -86,20 +90,18 @@ export const updateLog = async (req, res, next) => {
 
     try {
         let log = await Models.Log.findOne({
-            where: {
-                userId: req.user.id,
-                id: req.body.logId
-            }
+            userId: req.user.id,
+            _id: req.body.logId
         });
 
         if (!log) {
-            next(new ServerError('Log does not exist', 404, 'RESOURCE_NOT_FOUND'));
+            return next(new ServerError('Log does not exist', 404, 'RESOURCE_NOT_FOUND'));
         }
 
-        log = await log.update({
-            title: req.body.title,
-            note: req.body.note
-        });
+        log.title = req.body.title;
+        log.note = req.body.note;
+
+        log = await log.save();
 
         res.status(200).json({
             message: "Log updated",

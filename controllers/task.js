@@ -13,27 +13,26 @@ export const createTask = async (req, res, next) => {
 
     try {
         const log = await Models.Log.findOne({
-            where: {
-                id: req.body.logId,
-                userId: req.user.id
-            }
+            _id: req.body.logId,
+            userId: req.user._id
         });
 
-        if(!log){
+        if (!log) {
             return next(new ServerError('Log does not exist', 400, 'BAD_REQUEST'));
         }
 
-        const task = await Models.Task.create({
-            id: v4(),
-            logId: log.id,
+        const newTask = new Models.Task({
+            logId: log._id,
             title: req.body.title,
             priority: req.body.priority,
             due: req.body.due
         });
 
+        await newTask.save();
+
         res.status(201).json({
             message: "Task created",
-            task: task,
+            task: newTask,
         });
     } catch (e) {
         console.log(e);
@@ -50,27 +49,23 @@ export const deleteTask = async (req, res, next) => {
 
     try {
         const task = await Models.Task.findOne({
-            where: {
-                id: req.body.taskId
-            }
+            _id: req.body.taskId
         });
 
-        if(!task){
+        if (!task) {
             return next(new ServerError('Task does not exist', 404, 'RESOURCE_NOT_FOUND'));
         }
 
         const log = await Models.Log.findOne({
-            where: {
-                userId: req.user.id,
-                id: task.logId
-            }
+            userId: req.user._id,
+            _id: task.logId
         });
 
         if (!log) {
             return next(new ServerError('Unable to delete task', 402, 'FORBIDDEN'));
         }
 
-        await task.destroy();
+        await task.delete();
 
         res.status(200).json({
             message: "Task deleted",
@@ -91,22 +86,17 @@ export const fetchTasks = async (req, res, next) => {
 
     try {
         const log = await Models.Log.findOne({
-            where:{
-                userId: req.user.id,
-                id: req.body.logId
-            }
+            userId: req.user._id,
+            _id: req.body.logId
         });
 
-        if(!log){
+        if (!log) {
             return next(new ServerError('Unable to fetch task', 404, 'RESOURCE_NOT_FOUND'));
         }
 
-        const tasks = await Models.Task.findAll({
-            attributes: ['id', 'title', 'priority', 'due', 'isCompleted'],
-            where: {
-                logId: req.body.logId
-            }
-        });
+        const tasks = await Models.Task.find({
+            logId: req.body.logId
+        }).select('_id title priority due isCompleted');
 
         res.status(200).json({
             tasks: tasks,
@@ -127,29 +117,25 @@ export const toggleTask = async (req, res, next) => {
 
     try {
         let task = await Models.Task.findOne({
-            where: {
-                id: req.body.taskId
-            }
+            _id: req.body.taskId
         });
 
-        if(!task){
+        if (!task) {
             return next(new ServerError('Task does not exist', 404, 'RESOURCE_NOT_FOUND'));
         }
 
         const log = await Models.Log.findOne({
-            where: {
-                userId: req.user.id,
-                id: task.logId
-            }
+            userId: req.user._id,
+            _id: task.logId
         });
 
         if (!log) {
             return next(new ServerError('Unable to update task', 402, 'FORBIDDEN'));
         }
 
-        task = await task.update({
-            isCompleted: !task.isCompleted
-        });
+        task.completed = !task.completed;
+
+        await task.save();
 
         res.status(200).json({
             message: "Task updated",
