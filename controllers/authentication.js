@@ -26,7 +26,7 @@ export const login = async (req, res, next) => {
         }
 
         if (!user.verified) {
-            res.status(401).json({
+            return res.status(401).json({
                 message: "User verification required",
                 verified: false
             });
