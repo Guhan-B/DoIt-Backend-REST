@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 export const ConnectToDatabase = async () => {
-    const conn = await mongoose.connect(process.env.URI);
+    const conn = await mongoose.connect(process.env.URI, { useNewUrlParser: true, useUnifiedTopology: true });
     return conn;
 }
 
@@ -25,7 +25,7 @@ const userSchema = new Schema({
         type: Boolean,
         default: false
     },
-    avatar:{
+    avatar: {
         type: Number,
         default: 0,
     }
@@ -85,9 +85,26 @@ const taskSchema = new Schema({
     }
 });
 
+const emailOTPSchema = new Schema({
+    otp: {
+        type: Number,
+        required: true,
+    },
+    validTill: {
+        type: String,
+        required: true,
+    },
+    userId: {
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref: 'User'
+    }
+});
+
 export const Models = {
     User: mongoose.model('User', userSchema),
     Token: mongoose.model('Token', tokenSchema),
     Log: mongoose.model('Log', logSchema),
     Task: mongoose.model('Task', taskSchema),
+    EmailOTP: mongoose.model('EmailOTP', emailOTPSchema),
 }

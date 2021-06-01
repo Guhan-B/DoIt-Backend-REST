@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
+import sendGrid from '@sendgrid/mail';
 
 import { ConnectToDatabase } from './database/Database';
 import errorHandler from './middlewares/error';
@@ -13,6 +14,8 @@ import userRoutes from './routes/user';
 
 const startServer = async () => {
     dotenv.config();
+    sendGrid.setApiKey(process.env.SENDGRID_API);
+
     const app = express();
 
     app.use(express.json());

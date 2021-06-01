@@ -1,7 +1,7 @@
 import express from 'express';
 import { body } from 'express-validator';
 
-import { login, register, logout, refresh } from '../controllers/authentication';
+import { login, register, logout, refresh, generateOTP, verifyOTP } from '../controllers/authentication';
 import { accessHandler } from '../middlewares/authentication';
 
 const router = express.Router();
@@ -25,10 +25,6 @@ router.get(
 router.post(
     '/register',
     [
-        body('name')
-            .trim()
-            .isLength({ min: 3 })
-            .withMessage("Name should be minimum 3 characters"),
         body('email')
             .trim()
             .isEmail()
@@ -38,10 +34,6 @@ router.post(
             .trim()
             .isLength({ min: 6 })
             .withMessage("Passowrd should be minimum 6 characters long"),
-            body('avatar')
-            .trim()
-            .isNumeric()
-            .withMessage("Avatar must be a number"),
     ],
     register
 );
@@ -67,6 +59,34 @@ router.get(
             .withMessage('User id required')
     ],
     refresh
+);
+
+router.post(
+    '/generateOTP',
+    [
+        body('userId')
+            .trim()
+            .notEmpty()
+            .withMessage('User id required')
+    ],
+    generateOTP
+);
+
+router.get(
+    '/verifyOTP',
+    [
+        body('verfId')
+            .trim()
+            .notEmpty()
+            .withMessage('User id required'),
+        body('otp')
+            .trim()
+            .notEmpty()
+            .withMessage('otp required')
+            .isNumeric()
+            .withMessage('OTP should be a number')
+    ],
+    verifyOTP
 );
 
 export default router;
