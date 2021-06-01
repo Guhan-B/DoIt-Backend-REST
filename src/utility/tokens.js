@@ -1,6 +1,6 @@
-import jwt from 'jsonwebtoken';
+const jwt= require('jsonwebtoken');
 
-export const generateAccessTokens = (payload) => {
+exports.generateAccessTokens = (payload) => {
     const token = jwt.sign(
         {
             userId: payload.userId,
@@ -15,7 +15,7 @@ export const generateAccessTokens = (payload) => {
     return token;
 }
 
-export const generateRefreshTokens = (payload, extra) => {
+exports.generateRefreshTokens = (payload, extra) => {
     const token = jwt.sign(
         {
             userId: payload.userId,
@@ -28,12 +28,4 @@ export const generateRefreshTokens = (payload, extra) => {
         }
     );
     return token;
-}
-
-export const verifyAccessToken = (token) => {
-
-}
-
-export const verifyRefreshToken = (token) => {
-
 }

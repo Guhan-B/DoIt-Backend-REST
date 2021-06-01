@@ -1,8 +1,8 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
 
-export const ConnectToDatabase = async () => {
+exports.ConnectToDatabase = async () => {
     const conn = await mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
     return conn;
 }
@@ -101,7 +101,7 @@ const emailOTPSchema = new Schema({
     }
 });
 
-export const Models = {
+exports.Models = {
     User: mongoose.model('User', userSchema),
     Token: mongoose.model('Token', tokenSchema),
     Log: mongoose.model('Log', logSchema),

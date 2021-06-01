@@ -1,15 +1,14 @@
-import { v4 } from 'uuid';
-import bcrypt from 'bcryptjs';
-import { validationResult } from 'express-validator';
-import jwt from 'jsonwebtoken';
-import sendGrid from '@sendgrid/mail';
-import moment from 'moment';
+const bcrypt = require('bcryptjs');
+const { validationResult } = require('express-validator');
+const jwt = require('jsonwebtoken');
+const sendGrid = require('@sendgrid/mail');
+const moment = require('moment');
 
-import { Models } from '../database/Database';
-import { ServerError } from '../utility/error';
-import { generateAccessTokens, generateRefreshTokens } from '../utility/tokens';
+const { Models } = require('../database/Database');
+const { ServerError } = require('../utility/error');
+const { generateAccessTokens, generateRefreshTokens }= require('../utility/tokens');
 
-export const login = async (req, res, next) => {
+exports.login = async (req, res, next) => {
     const err = validationResult(req);
 
     if (!err.isEmpty()) {
@@ -60,7 +59,7 @@ export const login = async (req, res, next) => {
     }
 }
 
-export const register = async (req, res, next) => {
+exports.register = async (req, res, next) => {
     const err = validationResult(req);
 
 
@@ -99,7 +98,7 @@ export const register = async (req, res, next) => {
     }
 }
 
-export const generateOTP = async (req, res, next) => {
+exports.generateOTP = async (req, res, next) => {
     const err = validationResult(req);
 
     if (!err.isEmpty()) {
@@ -152,7 +151,7 @@ export const generateOTP = async (req, res, next) => {
     }
 }
 
-export const verifyOTP = async (req, res, next) => {
+exports.verifyOTP = async (req, res, next) => {
     const err = validationResult(req);
 
     if (!err.isEmpty()) {
@@ -217,7 +216,7 @@ export const verifyOTP = async (req, res, next) => {
     }
 }
 
-export const logout = async (req, res, next) => {
+exports.logout = async (req, res, next) => {
     const err = validationResult(req);
 
     if (!err.isEmpty()) {
@@ -245,7 +244,7 @@ export const logout = async (req, res, next) => {
     }
 }
 
-export const refresh = async (req, res, next) => {
+exports.refresh = async (req, res, next) => {
     const err = validationResult(req);
 
     if (!err.isEmpty()) {

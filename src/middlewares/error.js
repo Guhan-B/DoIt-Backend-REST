@@ -1,4 +1,4 @@
-import { v4 } from 'uuid';
+const { v4 } = require('uuid');
 
 const error = (err, req, res, next) => {
     const error = {
@@ -11,4 +11,4 @@ const error = (err, req, res, next) => {
     res.status(err.status).json({ error });
 }
 
-export default error;
+module.exports = error;

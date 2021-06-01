@@ -1,8 +1,8 @@
-import express from 'express';
-import { body } from 'express-validator';
+const express = require('express');
+const { body } = require('express-validator');
 
-import { login, register, logout, refresh, generateOTP, verifyOTP } from '../controllers/authentication';
-import { accessHandler } from '../middlewares/authentication';
+const { login, register, logout, refresh, generateOTP, verifyOTP } = require('../controllers/authentication');
+const { accessHandler } = require('../middlewares/authentication');
 
 const router = express.Router();
 
@@ -89,4 +89,4 @@ router.get(
     verifyOTP
 );
 
-export default router;
+module.exports = router;

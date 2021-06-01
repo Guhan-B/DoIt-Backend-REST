@@ -1,7 +1,7 @@
-import express from 'express';
-import { body } from 'express-validator';
+const express = require('express');
+const { body } = require('express-validator');
 
-import { createTask, deleteTask, fetchTasks, toggleTask } from '../controllers/task';
+const { createTask, deleteTask, fetchTasks, toggleTask } = require('../controllers/task');
 
 const router = express.Router();
 
@@ -67,4 +67,4 @@ router.post(
     toggleTask
 );
 
-export default router;
+module.exports = router;

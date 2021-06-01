@@ -1,10 +1,9 @@
-import { v4 } from 'uuid';
-import { validationResult } from 'express-validator';
+const { validationResult } = require('express-validator');
 
-import { ServerError } from '../utility/error';
-import { Models } from '../database/Database';
+const { ServerError } = require('../utility/error');
+const { Models } = require('../database/Database');
 
-export const createTask = async (req, res, next) => {
+exports.createTask = async (req, res, next) => {
     const err = validationResult(req);
 
     if (!err.isEmpty()) {
@@ -40,7 +39,7 @@ export const createTask = async (req, res, next) => {
     }
 }
 
-export const deleteTask = async (req, res, next) => {
+exports.deleteTask = async (req, res, next) => {
     const err = validationResult(req);
 
     if (!err.isEmpty()) {
@@ -77,7 +76,7 @@ export const deleteTask = async (req, res, next) => {
     }
 }
 
-export const fetchTasks = async (req, res, next) => {
+exports.fetchTasks = async (req, res, next) => {
     const err = validationResult(req);
 
     if (!err.isEmpty()) {
@@ -108,7 +107,7 @@ export const fetchTasks = async (req, res, next) => {
     }
 }
 
-export const toggleTask = async (req, res, next) => {
+exports.toggleTask = async (req, res, next) => {
     const err = validationResult(req);
 
     if (!err.isEmpty()) {

@@ -1,4 +1,4 @@
-export class ServerError extends Error {
+class ServerError extends Error {
     constructor(message, status, code, errors = []) {
         super(message);
         this.status = status;
@@ -6,3 +6,5 @@ export class ServerError extends Error {
         this.errors = errors;
     }
 }
+
+exports.ServerError = ServerError;

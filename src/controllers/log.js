@@ -1,10 +1,9 @@
-import { v4 } from 'uuid';
-import { validationResult } from 'express-validator';
+const { validationResult } = require('express-validator');
 
-import { ServerError } from '../utility/error';
-import { Models } from '../database/Database';
+const { ServerError } = require('../utility/error');
+const { Models } = require('../database/Database');
 
-export const createLog = async (req, res, next) => {
+exports.createLog = async (req, res, next) => {
     const err = validationResult(req);
 
     if (!err.isEmpty()) {
@@ -34,7 +33,7 @@ export const createLog = async (req, res, next) => {
     }
 }
 
-export const deleteLog = async (req, res, next) => {
+exports.deleteLog = async (req, res, next) => {
     const err = validationResult(req);
 
     if (!err.isEmpty()) {
@@ -68,7 +67,7 @@ export const deleteLog = async (req, res, next) => {
     }
 }
 
-export const fetchLogs = async (req, res, next) => {
+exports.fetchLogs = async (req, res, next) => {
     try {
         const logs = await Models.Log.find({ userId: req.user.id }).select('_id title note');
 
@@ -81,7 +80,7 @@ export const fetchLogs = async (req, res, next) => {
     }
 }
 
-export const updateLog = async (req, res, next) => {
+exports.updateLog = async (req, res, next) => {
     const err = validationResult(req);
 
     if (!err.isEmpty()) {

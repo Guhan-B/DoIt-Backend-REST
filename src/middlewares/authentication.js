@@ -1,9 +1,9 @@
-import jwt from 'jsonwebtoken';
+const jwt = require('jsonwebtoken');
 
-import { Models } from '../database/Database';
-import { ServerError } from '../utility/error';
+const { Models } = require('../database/Database');
+const { ServerError } = require('../utility/error');
 
-export const accessHandler = async (req, res, next) => {
+exports.accessHandler = async (req, res, next) => {
     console.log('[AUTH MIDDELWARE RUNNING]');
 
     let token = req.get('Authorization');

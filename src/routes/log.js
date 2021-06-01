@@ -1,7 +1,7 @@
-import express from 'express';
-import { body } from 'express-validator';
+const express = require('express');
+const { body } = require('express-validator');
 
-import { createLog, deleteLog, fetchLogs, updateLog } from '../controllers/log';
+const { createLog, deleteLog, fetchLogs, updateLog } = require('../controllers/log');
 
 const router = express.Router();
 
@@ -37,4 +37,4 @@ router.post(
     updateLog
 );
 
-export default router;
+module.exports = router;
