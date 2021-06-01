@@ -29,11 +29,13 @@ const startServer = async () => {
 
     app.use(errorHandler);
 
+    const PORT = process.env.PORT || 8000;
+
     try {
         const client = await ConnectToDatabase();
-        app.listen(process.env.SERVER_PORT, () => {
+        app.listen(PORT, () => {
             console.log(client);
-            console.log(`server is running at http://localhost:${process.env.SERVER_PORT}`);
+            console.log(`server is running at ${PORT}`);
         })
     } catch (error) {
         console.log(error);

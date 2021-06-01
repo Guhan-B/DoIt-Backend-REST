@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 export const ConnectToDatabase = async () => {
-    const conn = await mongoose.connect(process.env.URI, { useNewUrlParser: true, useUnifiedTopology: true });
+    const conn = await mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
     return conn;
 }
 
