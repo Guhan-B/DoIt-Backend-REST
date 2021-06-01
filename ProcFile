@@ -1,0 +1,1 @@
+web: node --exec babel-node -r dotenv/config index.js
