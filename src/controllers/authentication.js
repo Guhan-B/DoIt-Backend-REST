@@ -25,9 +25,10 @@ exports.login = async (req, res, next) => {
         }
 
         if (!user.verified) {
-            return res.status(401).json({
+            return res.status(202).json({
                 message: "User verification required",
-                verified: false
+                verified: false,
+                user: user
             });
         }
 
@@ -48,10 +49,10 @@ exports.login = async (req, res, next) => {
         await newToken.save();
 
         res.status(200).json({
-            userId: user._id,
+            user: user,
             accessToken,
             refreshToken,
-            expiresAt: Date.now() + 10 * 3600,
+            expiresAt: moment().add(15, 'm').toISOString(),
             verified: true
         });
     } catch (e) {
@@ -60,6 +61,7 @@ exports.login = async (req, res, next) => {
 }
 
 exports.register = async (req, res, next) => {
+    console.log("Register");
     const err = validationResult(req);
 
 
@@ -90,7 +92,12 @@ exports.register = async (req, res, next) => {
 
         res.status(201).json({
             message: "Proceed to email verification",
-            userId: newUser._id,
+            user: {
+                _id: newUser._id,
+                name: newUser.name,
+                email: newUser.email,
+                avatar: newUser.avatar
+            },
         });
     } catch (e) {
         console.log(e);
@@ -118,14 +125,20 @@ exports.generateOTP = async (req, res, next) => {
             return next(new ServerError('User already verified', 409, 'CONFLICT'));
         }
 
+        const oldEmailOTPs = await Models.EmailOTP.deleteMany({
+            userId: req.body.userId
+        });
+
         const min = Math.ceil(1000);
         const max = Math.floor(9999);
         const otp = Math.floor(Math.random() * (max - min) + min)
-        const validTill = moment().add(5, 'minutes').toISOString();
+        const validity = moment().add(15, 'm').toISOString();
+
+        const validityString = moment(validity).format('h:mm:ss a').toString() 
 
         const newEmailOTP = new Models.EmailOTP({
             otp,
-            validTill,
+            validity: validity,
             userId: req.body.userId
         });
 
@@ -143,7 +156,8 @@ exports.generateOTP = async (req, res, next) => {
 
         res.status(200).json({
             message: "OTP has been sent to registered email",
-            verificationId: newEmailOTP._id
+            verificationId: newEmailOTP._id,
+            validity: validityString,
         });
     } catch (e) {
         console.log(e);
@@ -160,23 +174,21 @@ exports.verifyOTP = async (req, res, next) => {
 
     try {
         const emailOTP = await Models.EmailOTP.findOne({
-            _id: req.body.verfId,
+            _id: req.body.verificationId,
         });
 
         if (!emailOTP) {
             return next(new ServerError('invalid verification', 404, 'RESOURCE_NOT_FOUND'));
         }
 
-
-
         console.log("Saved OTP:", emailOTP.otp);
-        console.log("User OTP:", Number.parseInt(req.body.otp));
+        console.log("User OTP:", Number.parseInt(req.body.OTP));
 
-        if (emailOTP.otp === Number.parseInt(req.body.otp)) {
+        if (emailOTP.otp === Number.parseInt(req.body.OTP)) {
             const current = moment();
-            const validTill = moment(emailOTP.validTill);
+            const validity = moment(emailOTP.validity);
 
-            if (moment(current).isBefore(validTill)) {
+            if (moment(current).isBefore(validity)) {
                 let user = await Models.User.findOne({
                     _id: emailOTP.userId
                 });
@@ -197,10 +209,9 @@ exports.verifyOTP = async (req, res, next) => {
                 await emailOTP.delete();
 
                 res.status(200).json({
-                    userId: user._id,
                     accessToken,
                     refreshToken,
-                    expiresAt: moment().add(15, 'minutes').toISOString()
+                    expiresAt: moment().add(15, 'm').toISOString()
                 });
             } else {
                 await emailOTP.delete();
@@ -285,7 +296,7 @@ exports.refresh = async (req, res, next) => {
                     const accessToken = generateAccessTokens({ userId: user._id });
                     res.status(200).json({
                         accessToken,
-                        expiresAt: Date.now() + 10 * 3600
+                        expiresAt: moment().add(15, 'm').toISOString()
                     });
                 } else {
                     return next(new ServerError("Refresh token invalid", 401, 'AUTHORIZATION_FAILED'));

@@ -6,7 +6,7 @@ const { accessHandler } = require('../middlewares/authentication');
 
 const router = express.Router();
 
-router.get(
+router.post(
     '/login',
     [
         body('email')
@@ -50,7 +50,7 @@ router.delete(
     logout
 );
 
-router.get(
+router.post(
     '/refresh',
     [
         body('userId')
@@ -72,19 +72,17 @@ router.post(
     generateOTP
 );
 
-router.get(
+router.post(
     '/verifyOTP',
     [
-        body('verfId')
+        body('verificationId')
             .trim()
             .notEmpty()
-            .withMessage('User id required'),
-        body('otp')
+            .withMessage('Verification id required'),
+        body('OTP')
             .trim()
             .notEmpty()
             .withMessage('otp required')
-            .isNumeric()
-            .withMessage('OTP should be a number')
     ],
     verifyOTP
 );

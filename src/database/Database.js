@@ -90,7 +90,7 @@ const emailOTPSchema = new Schema({
         type: Number,
         required: true,
     },
-    validTill: {
+    validity: {
         type: String,
         required: true,
     },
